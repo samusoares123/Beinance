@@ -11,8 +11,16 @@ import { calcularDesfecho } from './src/sinais.mjs'
 import { lerSinais, regravarSinais } from './src/armazenamento.mjs'
 
 const BASE = 'https://api.binance.com'
+/**
+ * Horizontes curtos existem porque a primeira coleta mostrou o resultado
+ * piorando monotonicamente com o tempo (+1,45% aos 15min → -4,34% em 4h).
+ * Se sobra vantagem em algum lugar, e antes dos 15 minutos — e sem medir os
+ * 5 e os 30 nao da para saber onde ela vira.
+ */
 const HORIZONTES = [
+  { nome: '5min', ms: 5 * 60_000 },
   { nome: '15min', ms: 15 * 60_000 },
+  { nome: '30min', ms: 30 * 60_000 },
   { nome: '1h', ms: 60 * 60_000 },
   { nome: '4h', ms: 4 * 60 * 60_000 },
 ]
@@ -39,17 +47,20 @@ async function main() {
   let pendentes = 0
 
   for (const s of sinais) {
-    if (s.desfechos) continue
     const entrada = new Date(s.momento).getTime()
-    const maduro = Date.now() - entrada >= HORIZONTES.at(-1).ms
 
-    if (!maduro) {
-      pendentes++
-      continue
-    }
+    // Cada horizonte amadurece na sua hora: os 5 minutos ja podem ser julgados
+    // enquanto as 4 horas ainda nao passaram. Preencher o que falta, em vez de
+    // pular o sinal inteiro, evita ter que esperar o horizonte mais longo — e
+    // permite acrescentar horizontes novos sem perder o historico.
+    const desfechos = s.desfechos ?? {}
+    let mudou = false
+    let faltaMaturar = false
 
-    const desfechos = {}
     for (const h of HORIZONTES) {
+      if (desfechos[h.nome]) continue
+      if (Date.now() - entrada < h.ms) { faltaMaturar = true; continue }
+
       const preco = await precoEm(s.simbolo, entrada + h.ms)
       if (preco === null) continue
       desfechos[h.nome] = calcularDesfecho({
@@ -57,9 +68,11 @@ async function main() {
         precoSaida: preco,
         custoTotalPct: s.custoTotalPct,
       })
+      mudou = true
     }
-    s.desfechos = desfechos
-    julgados++
+
+    if (mudou) { s.desfechos = desfechos; julgados++ }
+    if (faltaMaturar) pendentes++
   }
 
   if (julgados) await regravarSinais(sinais)
@@ -69,7 +82,7 @@ async function main() {
   // --- resumo por regra: a resposta que o projeto inteiro existe para dar ---
   const porRegra = new Map()
   for (const s of sinais) {
-    if (!s.desfechos) continue
+    if (!s.desfechos || Object.keys(s.desfechos).length === 0) continue
     if (!porRegra.has(s.regra)) porRegra.set(s.regra, [])
     porRegra.get(s.regra).push(s)
   }
