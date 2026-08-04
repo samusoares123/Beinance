@@ -9,6 +9,7 @@
     "monitor": "node --env-file=.env monitor.mjs",
     "scanner": "node scanner.mjs",
     "robo": "node robo.mjs",
+    "vigia": "node vigia.mjs",
     "desempenho": "node desempenho.mjs",
     "desfechos": "node desfechos.mjs",
     "ficha": "node ficha.mjs",
