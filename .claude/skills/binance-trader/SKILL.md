@@ -16,14 +16,15 @@ Projeto **pessoal** do Samuel, capital pequeno (~US$ 34 em 08/2026). Ele é enge
 - **Não escreva função de execução de ordem** enquanto o projeto estiver nas Fases 0–2. Ausência de código é a garantia; disciplina não é.
 - Chave só em `.env` fora do git. Nenhuma lib de terceiros entre o segredo e a API — `node:crypto` assina em 5 linhas.
 
-## Números verificados em 2026-08-03
+## Números verificados em 2026-08-03, reverificados em 2026-08-04
 
 Revalide com os comandos em "Como reverificar" antes de usar em cálculo — mudam.
 
 | Fato | Valor |
 |---|---|
-| Pares USDT em TRADING no Spot | 479 |
+| Pares USDT em TRADING no Spot | 479 (idêntico nas duas medições) |
 | `minNotional` | **varia por par** — BTC/ETH: 5 USDT; SHIB: 1 USDT. Consulte sempre, nunca assuma 5. |
+| `applyMinToMarket` | **`true` em 479 de 479** — nenhum par escapa do mínimo na venda a mercado. |
 | Taxa Spot | 0,1% por lado (0,075% pagando com BNB) |
 | Custo de ida e volta (só taxa) | 0,2% (0,15% com BNB) |
 | Pares com spread > 0,20% | 135 |
@@ -53,26 +54,40 @@ vendida se cair: US$ 5 num par de mínimo 5 vira US$ 4,50 após −10% → **ord
 rejeitada**. É o que travou HEMI e PUMP na carteira do Samuel. O stop não executa se a
 ordem for recusada por tamanho.
 
-Distribuição medida (2026-08-03): **450 dos 479 pares exigem 5 USDT**, só 29 exigem 1.
+Distribuição medida (2026-08-03, **reconfirmada em 2026-08-04**): **450 dos 479 pares exigem
+5 USDT**, só 29 exigem 1. E `applyMinToMarket` é `true` nos 479 — não existe par onde a
+ordem a mercado escape do mínimo.
+
+**Sobre a mudança de 2026-05-06** (o filtro passou a usar `referencePrice` em vez do preço
+do último negócio): medido em 34 pares ao longo de todo o espectro de preço, o desvio entre
+`referencePrice` e último preço é de **0,084% em média, 0,667% no pior caso, nenhum acima de
+1%**. Não muda o dimensionamento. O piso de venda continua **US$ 7,94 → arredonde para US$ 8**
+em par de mínimo 5. Seis pares não têm `referencePrice` e caem no comportamento antigo.
 
 | Regra | Valor |
 |---|---|
 | Posição em par de mínimo 5 USDT | **≥ US$ 8** (aguenta −37% e ainda vende) |
 | Posição em par de mínimo 1 USDT | US$ 5 (aguenta −80%) |
 | Máx. simultâneas | 3 |
-| Stop | **na corretora, via OCO no momento da compra** — não em processo próprio |
-
-Com US$ 33, preferir os 29 pares de mínimo 1 USDT permite posições de US$ 5 com saída
-garantida. Nos demais, US$ 5 é tamanho que prende.
+| Stop | **na corretora, junto com a compra** — não em processo próprio |
 | Stop por posição | −10% = −1,5% do capital |
 | Limite diário | 3 stops seguidos → para o dia |
 | Kill switch | −20% do capital → para tudo |
+
+Com US$ 33, preferir os 29 pares de mínimo 1 USDT permite posições de US$ 5 com saída
+garantida. Nos demais, US$ 5 é tamanho que prende.
+
+**O stop na corretora tem endpoint** (para quando a Fase 3 for autorizada pela medição, não
+antes): `POST /api/v3/orderList/otoco` coloca a compra e, **no momento em que ela executa**,
+cria sozinha o par alvo + stop. A posição nasce protegida mesmo com o PC desligado. Cada
+OCO ocupa 2 slots em `MAX_NUM_ORDERS`, e **as duas pernas também obedecem ao `minNotional`** —
+posição pequena demais gera stop que a corretora recusa, que é o pior dos mundos.
 
 ## Antes de arriscar dinheiro: meça
 
 Nunca aprove uma ideia de trade por plausibilidade. O caminho custa R$ 0:
 
-1. Scanner ao vivo dos 479 pares (WebSocket `!ticker@arr`, público, sem chave).
+1. Scanner ao vivo dos 479 pares (WebSocket `!miniTicker@arr`, público, sem chave).
 2. Gravar cada sinal **e o que aconteceu 15min / 1h / 4h depois**.
 3. Somar: "se eu tivesse comprado todo sinal, qual o líquido depois de taxa e spread?"
 4. Executar só se o passo 3 der positivo.
@@ -91,7 +106,7 @@ Backtest em candle de 1 minuto **mente sobre spread e slippage** justamente nas 
 | USDT "não sobe" | É dólar, não investimento. Parado rende zero. |
 | Fundamentos da moeda errados | A busca do CoinGecko é **difusa**: `/search?query=FF` devolve `official-trump` em 1º. Case por **símbolo exato** e desempate por melhor rank (`escolherMoeda` em `src/fundamentos.mjs`), nunca pelo primeiro resultado. |
 | Data civil volta um dia | `new Date('2026-08-03')` é meia-noite **UTC** e vira 02/08 em UTC−3. Use `src/datas.mjs`. |
-| WebSocket conecta mas não chega mensagem | `!ticker@arr` gera frames de centenas de KB e é descartado no caminho de rede (medido: 0 msg em 20s). Use **`!miniTicker@arr`** — mesmo mercado, frames de 10 KB, e traz `s`/`c`/`q`, que é tudo que o scanner lê. |
+| WebSocket conecta mas não chega mensagem | **`!ticker@arr` foi aposentado pela Binance em 2026-03-26** (anunciado em 2025-12-02). O socket abre, o SUBSCRIBE é aceito, e nenhum evento chega — não é bug de rede nem frame grande, é stream que não existe mais. Substituto oficial: **`!miniTicker@arr`**, que traz `s`/`c`/`q` — tudo que o scanner lê. |
 
 ## Fontes de dados (testadas em 2026-08-03)
 
