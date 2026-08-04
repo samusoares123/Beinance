@@ -47,13 +47,23 @@ Nuance: o spread só é pago por quem cruza o livro (ordem a mercado / taker). O
 
 ## Limites com capital pequeno
 
-Com US$ 33. O mínimo por ordem varia por par (`node ficha.mjs <MOEDA>` mostra) — em pares
-com mínimo de 1 USDT cabem mais posições que os 3 abaixo, mas o teto de exposição continua.
+**A ARMADILHA DA POSIÇÃO MÍNIMA.** `minNotional` vale para a **venda** também
+(`applyMinToMarket = true`). Comprar exatamente o mínimo cria posição que não pode ser
+vendida se cair: US$ 5 num par de mínimo 5 vira US$ 4,50 após −10% → **ordem de venda
+rejeitada**. É o que travou HEMI e PUMP na carteira do Samuel. O stop não executa se a
+ordem for recusada por tamanho.
+
+Distribuição medida (2026-08-03): **450 dos 479 pares exigem 5 USDT**, só 29 exigem 1.
 
 | Regra | Valor |
 |---|---|
-| Posição | US$ 5 = 15% do capital |
-| Máx. simultâneas | 3 (US$ 15 expostos, US$ 18 em caixa) |
+| Posição em par de mínimo 5 USDT | **≥ US$ 8** (aguenta −37% e ainda vende) |
+| Posição em par de mínimo 1 USDT | US$ 5 (aguenta −80%) |
+| Máx. simultâneas | 3 |
+| Stop | **na corretora, via OCO no momento da compra** — não em processo próprio |
+
+Com US$ 33, preferir os 29 pares de mínimo 1 USDT permite posições de US$ 5 com saída
+garantida. Nos demais, US$ 5 é tamanho que prende.
 | Stop por posição | −10% = −1,5% do capital |
 | Limite diário | 3 stops seguidos → para o dia |
 | Kill switch | −20% do capital → para tudo |

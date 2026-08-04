@@ -12,6 +12,8 @@ const CAMINHOS = {
   aportes: 'data/aportes.json',
   alphaManual: 'data/alpha-manual.json',
   sinais: 'data/sinais.jsonl',
+  operacoes: 'data/operacoes.jsonl',
+  estadoRobo: 'data/robo-estado.json',
 }
 
 async function garantirPasta(caminho) {
@@ -60,6 +62,35 @@ export async function lerSinais() {
 export async function regravarSinais(sinais) {
   await garantirPasta(CAMINHOS.sinais)
   await writeFile(CAMINHOS.sinais, sinais.map((s) => JSON.stringify(s)).join('\n') + '\n', 'utf8')
+}
+
+// --- robo (modo simulado) ------------------------------------------------
+
+export async function gravarOperacao(operacao) {
+  await garantirPasta(CAMINHOS.operacoes)
+  await appendFile(CAMINHOS.operacoes, JSON.stringify(operacao) + '\n', 'utf8')
+}
+
+export async function lerOperacoes() {
+  if (!existsSync(CAMINHOS.operacoes)) return []
+  const texto = await readFile(CAMINHOS.operacoes, 'utf8')
+  return texto.split('\n').filter((l) => l.trim()).map((l) => JSON.parse(l))
+}
+
+/** Estado sobrevive a reinicio: posicoes abertas nao podem sumir num Ctrl+C. */
+export async function lerEstadoRobo(capitalInicialUsdt) {
+  const padrao = {
+    capitalUsdt: capitalInicialUsdt,
+    capitalInicioDoDia: capitalInicialUsdt,
+    posicoes: [],
+    stopsSeguidos: 0,
+  }
+  return lerJson(CAMINHOS.estadoRobo, padrao)
+}
+
+export async function salvarEstadoRobo(estado) {
+  await garantirPasta(CAMINHOS.estadoRobo)
+  await writeFile(CAMINHOS.estadoRobo, JSON.stringify(estado, null, 2), 'utf8')
 }
 
 /** [{ data: '2026-08-01', valorBRL: 100 }] */

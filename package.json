@@ -8,6 +8,8 @@
     "test": "node --test",
     "monitor": "node --env-file=.env monitor.mjs",
     "scanner": "node scanner.mjs",
+    "robo": "node robo.mjs",
+    "desempenho": "node desempenho.mjs",
     "desfechos": "node desfechos.mjs",
     "ficha": "node ficha.mjs",
     "probe": "node --env-file=.env probe.mjs"
