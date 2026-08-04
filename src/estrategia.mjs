@@ -37,6 +37,20 @@ export function tamanhoDaPosicao({ capitalUsdt, minNotional, fracaoMaxima, marge
 }
 
 /**
+ * Quanto a posicao pode cair antes de a VENDA ser recusada por tamanho.
+ *
+ * O ponto de recusa e o `minNotional`, nao o piso de abertura. Confundir os dois
+ * subestima grosseiramente a folga: uma posicao de 8,25 num par de minimo 5
+ * aguenta -39%, nao os -4% que a distancia ate o piso de abertura sugere. Errar
+ * para baixo aqui produz um stop apertado demais, que sai da posicao por
+ * oscilacao normal e transforma ruido em prejuizo realizado.
+ */
+export function quedaAteOMinimo({ tamanhoUsdt, minNotional }) {
+  if (!(tamanhoUsdt > 0) || tamanhoUsdt < minNotional) return null
+  return arredondar((minNotional / tamanhoUsdt - 1) * 100)
+}
+
+/**
  * A posicao deve ser encerrada?
  *
  * O stop e avaliado ANTES do alvo: numa vela violenta que atravessa os dois, o

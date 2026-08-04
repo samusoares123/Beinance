@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { tamanhoDaPosicao, avaliarSaida } from '../src/estrategia.mjs'
+import { tamanhoDaPosicao, avaliarSaida, quedaAteOMinimo } from '../src/estrategia.mjs'
 
 const PADRAO = { fracaoMaxima: 0.25, margemSeguranca: 0.35 }
 
@@ -63,4 +63,24 @@ test('posicao no meio do caminho continua aberta', () => {
   const r = avaliarSaida({ ...POSICAO, precoAtual: 101, abertaHaMs: 60_000 })
   assert.equal(r.sair, false)
   assert.equal(r.motivo, null)
+})
+
+// --- quedaAteOMinimo -----------------------------------------------------
+
+test('a queda tolerada e medida ate o minNotional, nao ate o piso de abertura', () => {
+  // US$ 8,25 num par de minimo 5 aguenta -39,4%. Comparar contra o piso de
+  // abertura (7,94) daria -3,8% e sugeriria um stop absurdamente apertado.
+  assert.equal(quedaAteOMinimo({ tamanhoUsdt: 8.25, minNotional: 5 }), -39.39)
+})
+
+test('posicao no limite do minimo nao tolera queda nenhuma', () => {
+  assert.equal(quedaAteOMinimo({ tamanhoUsdt: 5, minNotional: 5 }), 0)
+})
+
+test('posicao ja abaixo do minimo devolve null em vez de numero positivo', () => {
+  assert.equal(quedaAteOMinimo({ tamanhoUsdt: 4, minNotional: 5 }), null)
+})
+
+test('tamanho invalido devolve null', () => {
+  assert.equal(quedaAteOMinimo({ tamanhoUsdt: 0, minNotional: 5 }), null)
 })
