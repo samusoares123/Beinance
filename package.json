@@ -13,6 +13,9 @@
     "desempenho": "node desempenho.mjs",
     "desfechos": "node desfechos.mjs",
     "ficha": "node ficha.mjs",
+    "dossie": "node dossie.mjs",
+    "sazonalidade": "node sazonalidade.mjs",
+    "backtest": "node backtest.mjs",
     "probe": "node --env-file=.env probe.mjs"
   },
   "engines": {
