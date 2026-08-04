@@ -13,7 +13,8 @@ import { tamanhoDaPosicao, quedaAteOMinimo } from './estrategia.mjs'
 import { desfechosDe, taxaDeAcionamento, percentil } from './dossie.mjs'
 import { momentoLocal, estatisticas, DIAS } from './calendario.mjs'
 
-const BASE = 'https://api.binance.com'
+import { API } from './api.mjs'
+const BASE = API
 export const FUSO = -3
 const TAXA_POR_LADO = 0.1
 

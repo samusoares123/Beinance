@@ -20,7 +20,8 @@
 import { custoIdaVolta, slippageDeCompra } from './src/analise.mjs'
 import { gravarSinal, lerSnapshotAnterior, salvarSnapshotAnterior, PASTA_DADOS } from './src/armazenamento.mjs'
 
-const BASE = 'https://api.binance.com'
+import { API } from './src/api.mjs'
+const BASE = API
 
 const LIMITES = {
   custoTotalPct: 0.5, // acima disso o sinal ja nasce sem chance

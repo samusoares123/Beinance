@@ -20,7 +20,8 @@ import {
 import { buscarFundamentos } from './src/fundamentos.mjs'
 import { buscarPaprika, buscarCmc, buscarTvl, buscarMedoGanancia, consensoDeFontes } from './src/fontes.mjs'
 
-const BASE = 'https://api.binance.com'
+import { API } from './src/api.mjs'
+const BASE = API
 const TAXA_POR_LADO = 0.1 // % — 0,075 se pagar com BNB
 
 // Limites de elegibilidade (ver .claude/skills/binance-trader)

@@ -10,7 +10,8 @@
 import { calcularDesfecho } from './src/sinais.mjs'
 import { lerSinais, regravarSinais } from './src/armazenamento.mjs'
 
-const BASE = 'https://api.binance.com'
+import { API } from './src/api.mjs'
+const BASE = API
 /**
  * Horizontes curtos existem porque a primeira coleta mostrou o resultado
  * piorando monotonicamente com o tempo (+1,45% aos 15min → -4,34% em 4h).

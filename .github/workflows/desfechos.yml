@@ -38,6 +38,8 @@ jobs:
       - name: Julgar os sinais
         env:
           BEINANCE_DADOS: coleta
+          # Runner do GitHub fica em IP dos EUA e a api.binance.com responde 451.
+          BEINANCE_API: https://data-api.binance.vision
         run: node desfechos.mjs | tee resumo.txt
 
       - name: Publicar o resumo no sumario da execucao

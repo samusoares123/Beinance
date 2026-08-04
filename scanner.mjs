@@ -12,7 +12,8 @@ import { detectarEstouroDeVolume, detectarQuedaSubita, janelaDe } from './src/si
 import { custoIdaVolta, slippageDeCompra } from './src/analise.mjs'
 import { gravarSinal } from './src/armazenamento.mjs'
 
-const BASE = 'https://api.binance.com'
+import { API, STREAM as BASE_STREAM } from './src/api.mjs'
+const BASE = API
 /**
  * !miniTicker@arr, nao !ticker@arr.
  *
@@ -24,7 +25,7 @@ const BASE = 'https://api.binance.com'
  * O scanner le apenas s (simbolo), c (preco) e q (volume em USDT), os tres
  * presentes no miniTicker. Nada se perde.
  */
-const STREAM = 'wss://stream.binance.com:9443/ws/!miniTicker@arr'
+const STREAM = `${BASE_STREAM}/ws/!miniTicker@arr`
 
 const TAXA_POR_LADO = 0.1
 const LIMITES = { custoTotalPct: 0.5, tickPct: 0.1, volume24hUsdt: 100_000 }

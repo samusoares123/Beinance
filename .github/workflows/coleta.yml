@@ -38,6 +38,8 @@ jobs:
       - name: Coletar
         env:
           BEINANCE_DADOS: coleta
+          # Runner do GitHub fica em IP dos EUA e a api.binance.com responde 451.
+          BEINANCE_API: https://data-api.binance.vision
         run: node coletor.mjs
 
       - name: Comitar o que mudou

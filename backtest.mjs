@@ -16,7 +16,8 @@
 import { padroesEm } from './src/candles.mjs'
 import { custoIdaVolta } from './src/analise.mjs'
 
-const BASE = 'https://api.binance.com'
+import { API } from './src/api.mjs'
+const BASE = API
 const intervalo = process.argv[2] ?? '1h'
 const maxPares = Number(process.argv[3] ?? 80)
 

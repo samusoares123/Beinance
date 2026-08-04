@@ -21,7 +21,8 @@
 import { momentoLocal, estatisticas, agruparPor, DIAS } from './src/calendario.mjs'
 import { custoIdaVolta } from './src/analise.mjs'
 
-const BASE = 'https://api.binance.com'
+import { API } from './src/api.mjs'
+const BASE = API
 const FUSO = -3
 const maxPares = Number(process.argv[2] ?? 40)
 const meses = Number(process.argv[3] ?? 12)

@@ -8,6 +8,8 @@
  * em vez de entusiasmo. O limite nunca e a matematica — e a liquidez do livro.
  */
 
+import { API } from './src/api.mjs'
+
 const ganhoPct = Number(process.argv[2] ?? 1)
 const operacoes = Number(process.argv[3] ?? 86_400)
 const capitalBRL = Number(process.argv[4] ?? 33)
@@ -29,7 +31,7 @@ function escala(v) {
 
 /** Quantos USDT cabem no livro antes de o preco subir `limitePct`. */
 async function liquidezAte(par, limitePct) {
-  const r = await fetch(`https://api.binance.com/api/v3/depth?symbol=${par}&limit=5000`)
+  const r = await fetch(`${API}/api/v3/depth?symbol=${par}&limit=5000`)
   const livro = await r.json()
   const melhor = Number(livro.asks[0][0])
   const teto = melhor * (1 + limitePct / 100)

@@ -18,7 +18,8 @@ import { tamanhoDaPosicao, avaliarSaida } from './src/estrategia.mjs'
 import { podeAbrir, resumoDoDia } from './src/risco.mjs'
 import { lerEstadoRobo, salvarEstadoRobo, gravarOperacao, lerOperacoes } from './src/armazenamento.mjs'
 
-const BASE = 'https://api.binance.com'
+import { API } from './src/api.mjs'
+const BASE = API
 const STREAM = 'wss://stream.binance.com:9443/ws/!miniTicker@arr'
 
 const CFG = {
