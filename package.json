@@ -13,7 +13,9 @@
     "desempenho": "node desempenho.mjs",
     "desfechos": "node desfechos.mjs",
     "ficha": "node ficha.mjs",
+    "coletor": "node coletor.mjs",
     "dossie": "node dossie.mjs",
+    "painel-dossie": "node painel-dossie.mjs",
     "sazonalidade": "node sazonalidade.mjs",
     "backtest": "node backtest.mjs",
     "probe": "node --env-file=.env probe.mjs"

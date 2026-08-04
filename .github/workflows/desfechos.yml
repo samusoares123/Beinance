@@ -1,0 +1,64 @@
+name: Desfechos
+
+# Julga os sinais ja coletados: o que o preco fez 5min, 15min, 30min, 1h e 4h
+# depois, liquido de custo. Roda uma vez por dia porque os desfechos vem de
+# candles historicos — nao importa a hora em que a conta e feita, so que o
+# horizonte ja tenha amadurecido.
+#
+# Rodar isto a cada 15 minutos seria desperdicio: o mesmo sinal seria
+# reprocessado 96 vezes por dia para preencher os mesmos campos.
+
+on:
+  schedule:
+    - cron: '20 9 * * *' # 09:20 UTC = 06:20 em Brasilia, relatorio pronto ao acordar
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desfechos
+  cancel-in-progress: false
+
+jobs:
+  julgar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Testes
+        run: node --test test/*.test.mjs
+
+      - name: Julgar os sinais
+        env:
+          BEINANCE_DADOS: coleta
+        run: node desfechos.mjs | tee resumo.txt
+
+      - name: Publicar o resumo no sumario da execucao
+        run: |
+          {
+            echo '## Desfechos'
+            echo '```'
+            cat resumo.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comitar os desfechos preenchidos
+        run: |
+          git config user.name  "beinance-bot"
+          git config user.email "beinance-bot@users.noreply.github.com"
+          rm -f resumo.txt
+          git add coleta/
+          if git diff --cached --quiet; then
+            echo "Nenhum sinal novo amadureceu."
+            exit 0
+          fi
+          git commit -m "desfechos: $(date -u '+%Y-%m-%d')"
+          git pull --rebase origin main
+          git push origin HEAD:main

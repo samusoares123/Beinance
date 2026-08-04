@@ -39,7 +39,8 @@ async function precoEm(simbolo, instante) {
 async function main() {
   const sinais = await lerSinais()
   if (sinais.length === 0) {
-    console.log('Nenhum sinal gravado ainda. Rode `node scanner.mjs` e deixe coletando.')
+    console.log('Nenhum sinal gravado ainda. Rode `node scanner.mjs` (ao vivo, no PC)')
+    console.log('ou `node coletor.mjs` (por rodada, no GitHub Actions) e deixe coletando.')
     return
   }
 

@@ -1,0 +1,58 @@
+name: Coleta
+
+# Fotografa o mercado a cada 15 minutos e grava os sinais com o LIVRO REAL do
+# instante — que e o unico dado que o historico de candles nao devolve.
+#
+# O estado vive no repositorio (coleta/snapshot-anterior.json) porque o runner
+# e efemero: cada execucao le a foto que a anterior gravou.
+#
+# Publico: nenhum segredo, nenhuma chave, nenhuma ordem. So endpoints abertos
+# da Binance. Nao adicione `secrets` aqui — a coleta nao precisa e nunca vai.
+
+on:
+  schedule:
+    # A cada 15 min. O GitHub atrasa cron sob carga; a janela e medida pelo
+    # relogio, nao pelo agendamento, entao atraso vira janela maior, nao erro.
+    - cron: '*/15 * * * *'
+  workflow_dispatch: # botao "Run workflow" na aba Actions
+
+permissions:
+  contents: write # para comitar os dados coletados de volta
+
+concurrency:
+  group: coleta
+  cancel-in-progress: false # duas execucoes gravando o mesmo arquivo se atropelam
+
+jobs:
+  coletar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Coletar
+        env:
+          BEINANCE_DADOS: coleta
+        run: node coletor.mjs
+
+      - name: Comitar o que mudou
+        run: |
+          git config user.name  "beinance-bot"
+          git config user.email "beinance-bot@users.noreply.github.com"
+          git add coleta/
+          # Sem mudanca nao ha commit — rodada sem sinal e resultado normal,
+          # nao falha. `git commit` sozinho sairia com codigo 1 e pintaria a
+          # aba Actions de vermelho todo dia.
+          if git diff --cached --quiet; then
+            echo "Nada mudou nesta rodada."
+            exit 0
+          fi
+          git commit -m "coleta: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          # Outro job (desfechos) tambem comita. Rebase antes de empurrar.
+          git pull --rebase origin main
+          git push origin HEAD:main

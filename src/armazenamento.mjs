@@ -7,14 +7,25 @@ import { readFile, writeFile, appendFile, mkdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { dirname } from 'node:path'
 
-const CAMINHOS = {
-  snapshots: 'data/snapshots.jsonl',
-  aportes: 'data/aportes.json',
-  alphaManual: 'data/alpha-manual.json',
-  sinais: 'data/sinais.jsonl',
-  operacoes: 'data/operacoes.jsonl',
-  estadoRobo: 'data/robo-estado.json',
+/**
+ * A pasta e configuravel porque a coleta no GitHub Actions precisa gravar em
+ * `coleta/`, que E versionada, enquanto `data/` fica de fora do git por conter
+ * leitura de conta. Runner e efemero: o que nao for comitado desaparece.
+ */
+export function caminhosEm(base) {
+  return {
+    snapshots: `${base}/snapshots.jsonl`,
+    aportes: `${base}/aportes.json`,
+    alphaManual: `${base}/alpha-manual.json`,
+    sinais: `${base}/sinais.jsonl`,
+    operacoes: `${base}/operacoes.jsonl`,
+    estadoRobo: `${base}/robo-estado.json`,
+    snapshotAnterior: `${base}/snapshot-anterior.json`,
+  }
 }
+
+export const PASTA_DADOS = process.env.BEINANCE_DADOS ?? 'data'
+const CAMINHOS = caminhosEm(PASTA_DADOS)
 
 async function garantirPasta(caminho) {
   const pasta = dirname(caminho)
@@ -98,3 +109,13 @@ export const lerAportes = () => lerJson(CAMINHOS.aportes, [])
 
 /** { dataLeitura: '2026-08-03', valorUsdt: 0.83 } — preenchido a mao pelo app. */
 export const lerAlphaManual = () => lerJson(CAMINHOS.alphaManual, null)
+
+// --- coleta sem estado em memoria (GitHub Actions) ------------------------
+
+/** Snapshot anterior de precos. Null na primeira execucao. */
+export const lerSnapshotAnterior = () => lerJson(CAMINHOS.snapshotAnterior, null)
+
+export async function salvarSnapshotAnterior(snapshot) {
+  await garantirPasta(CAMINHOS.snapshotAnterior)
+  await writeFile(CAMINHOS.snapshotAnterior, JSON.stringify(snapshot), 'utf8')
+}
