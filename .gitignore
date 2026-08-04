@@ -1,0 +1,10 @@
+.env
+.env.local
+node_modules/
+
+# Dados da conta e da coleta: ficam so na sua maquina.
+data/
+
+# Saida de processo longo (scanner/painel).
+*.log
+*.err
